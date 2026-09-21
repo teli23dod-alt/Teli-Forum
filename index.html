@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B/L</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  /* ── نفس ستايل الصفحة الرئيسية تماماً ── */
+  .hidden { display: none !important; }
+
+  .glass {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .flag { display:inline-block;width:22px;height:15px;position:relative;border:1px solid rgba(255,255,255,0.25);flex-shrink:0; }
+  .flag-eg { background:linear-gradient(to bottom,#ce1126 33.3%,#ffffff 33.3%,#ffffff 66.6%,#000000 66.6%); }
+  .flag-england { background:#ffffff; }
+  .flag-england::before { content:"";position:absolute;background:#ce1126;top:0;left:42%;width:16%;height:100%; }
+  .flag-england::after  { content:"";position:absolute;background:#ce1126;top:40%;left:0;width:100%;height:20%; }
+  .flag-ru { background:linear-gradient(to bottom,#ffffff 33.3%,#0033a0 33.3%,#0033a0 66.6%,#da291c 66.6%); }
+  .flag-fr { background:linear-gradient(to right,#002395 33.3%,#ffffff 33.3%,#ffffff 66.6%,#ed2939 66.6%); }
+  .flag-de { background:linear-gradient(to bottom,#000000 33.3%,#dd0000 33.3%,#dd0000 66.6%,#ffce00 66.6%); }
+  .flag-es { background:linear-gradient(to bottom,#aa151b 25%,#f1bf00 25%,#f1bf00 75%,#aa151b 75%); }
+  .flag-tr { background:#e30a17; position:relative; overflow:hidden; }
+  .flag-tr::before { content:''; position:absolute; width:6px; height:6px; background:white; border-radius:50%; top:50%; left:28%; transform:translate(-50%,-50%); box-shadow:2px 0 0 1px white, 4px -1px 0 0px #e30a17; }
+
+  /* ── نفس الخلفية من الصفحة الرئيسية ── */
+  .custom-main-bg {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    background:
+      linear-gradient(to right, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.4) 50%, rgba(15,23,42,0.85) 100%),
+      linear-gradient(to bottom, rgba(15,23,42,0.3), rgba(2,6,23,0.9)),
+      url('https://i.ibb.co/QFpW3PMm/Egyptian-exports-rise-9-6-in-December-2024.jpg'),
+      url('https://i.ibb.co/Y4CX5RBs/hq720.jpg');
+    background-position: center center, center center, right center, left center;
+    background-size: cover, cover, 50% 100%, 50% 100%;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  /* ── Toggle Switch ── */
+  .toggle-wrap { display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);transition:all 0.2s; }
+  .toggle-wrap:hover { background:rgba(255,255,255,0.07); }
+  .sw { width:40px;height:22px;border-radius:11px;background:rgba(255,255,255,0.2);position:relative;transition:background 0.25s;flex-shrink:0; }
+  .sw::after { content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;transition:transform 0.25s; }
+  .sw.on { background:#06b6d4; }
+  .sw.on::after { transform:translateX(18px); }
+
+  /* ── Template card ── */
+  .tpl-card { border:2px solid rgba(255,255,255,0.1);cursor:pointer;transition:all 0.2s;border-radius:14px;overflow:hidden; }
+  .tpl-card:hover { border-color:rgba(99,102,241,0.5);transform:translateY(-3px); }
+  .tpl-card.selected { border-color:#06b6d4;box-shadow:0 0 0 3px rgba(6,182,212,0.15); }
+
+  /* ── HS Code hint ── */
+  .hs-hint { display:none;margin-top:4px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:7px;padding:5px 10px;font-size:11px;color:#6ee7b7;align-items:center;gap:6px; }
+  .hs-hint.show { display:flex; }
+
+  /* ── Table inputs ── */
+  .tbl-inp { width:100%;background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 9px;font-size:12px;color:white;outline:none;font-family:inherit;transition:border-color 0.2s; }
+  .tbl-inp:focus { border-color:#06b6d4; }
+  .tbl-inp::placeholder { color:rgba(255,255,255,0.25); }
+  .tbl-sel { width:100%;background:#0f172a;border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:7px 9px;font-size:12px;color:white;outline:none;font-family:inherit; }
+  .tbl-sel option { background:#1e293b; }
+
+  /* ── Form inputs ── */
+  .form-inp { width:100%;background:rgba(15,23,42,0.8);border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 14px;font-size:13px;color:white;outline:none;font-family:inherit;transition:border-color 0.2s; }
+  .form-inp:focus { border-color:#06b6d4; }
+  .form-inp::placeholder { color:rgba(255,255,255,0.25); }
+  select.form-inp { background:#0f172a; }
+  select.form-inp option { background:#1e293b; }
+
+  /* ── Print ── */
+  @media print {
+    .no-print { display:none !important; }
+    body { background:white !important; }
+    #print-area { box-shadow:none !important; }
+  }
+  .speakable { cursor: help; }
+  .speakable:hover { text-decoration: underline dotted rgba(255,255,255,0.35); }
+</style>
+</head>
+<body>
+<div class="custom-main-bg text-white font-sans antialiased">
+
+  <!-- ── HEADER ── -->
+  <header class="no-print max-w-7xl mx-auto pt-8 px-6 relative z-10">
+    <!-- Language selector -->
+    <div class="mb-4">
+      <div class="grid grid-cols-4 sm:grid-cols-7 gap-2 max-w-3xl mx-auto">
+        <button onclick="changeLang('ar')" class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-900/80 border border-white/10 hover:border-violet-500/50 text-xs font-medium transition"><span class="flag flag-eg"></span> العربية</button>
+        <button onclick="changeLang('en')" class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-900/80 border border-white/10 hover:border-violet-500/50 text-xs font-medium transition"><span class="flag flag-england"></span> English</button>
+        <button onclick="changeLang('ru')" class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-900/80 border border-white/10 hover:border-violet-500/50 text-xs font-medium transition"><span class="flag flag-ru"></span> Русский</button>
+        <button onclick="changeLang('fr')" class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-900/80 border border-white/10 hover:border-violet-500/50 text-xs font-medium transition"><span class="flag flag-fr"></span> Français</button>
+        <button onclick="changeLang('de')" class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-900/80 border border-white/10 hover:border-violet-500/50 text-xs font-medium transition"><span class="flag flag-de"></span> Deutsch</button>
+        <button onclick="changeLang('es')" class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-900/80 border border-white/10 hover:border-violet-500/50 text-xs font-medium transition"><span class="flag flag-es"></span> Español</button>
+        <button onclick="changeLang('tr')" class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-900/80 border border-white/10 hover:border-violet-500/50 text-xs font-medium transition"><span class="flag flag-tr"></span> Türkçe</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="max-w-4xl mx-auto px-4 pb-16 relative z-10">
+
+    <!-- Page Title -->
+    <div class="no-print text-center mb-8">
+      <p class="text-xs font-bold tracking-wider text-cyan-400 uppercase mb-2 bg-slate-950/80 px-4 py-2 inline-block rounded-full border border-cyan-500/30">
+        <span id="lbl-badge" class="speakable">📄 Professional Shipping Documentation</span>
+      </p>
+      <h2 id="lbl-main-title" class="speakable" class="text-3xl font-black text-white mt-2">Shipping Doc Generator</h2>
+      <p id="lbl-main-sub" class="speakable" class="text-white/50 text-sm mt-1">Fill in details — choose template — download PDF</p>
+    </div>
+
+    <!-- ─── CARD 1: Template + Logo + Doc Type ─── -->
+    <div class="no-print glass rounded-2xl p-6 mb-5 border border-white/10">
+      <h3 class="text-sm font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2 mb-4">
+        <i class="fa-solid fa-layer-group"></i>
+        <span id="lbl-tpl-title" class="speakable">Template Design & Document Type</span>
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+        <!-- Doc Type -->
+        <div>
+          <label class="block text-xs text-white/50 uppercase mb-1.5" id="lbl-doc-type">Document Type</label>
+          <select id="docType" class="form-inp" onchange="onDocTypeChange(this.value)">
+            <optgroup label="🚢 Bill of Lading — بوليصة الشحن">
+              <option value="bl_original">🚢 Original Bill of Lading (3 Originals)</option>
+              <option value="bl_seaway">⚓ Sea Waybill (Non-Negotiable)</option>
+              <option value="bl_through">🔄 Through Bill of Lading (Multi-leg)</option>
+              <option value="bl_switch">🔀 Switch Bill of Lading</option>
+              <option value="bl_house">🏠 House Bill of Lading (HBL)</option>
+              <option value="bl_master">📋 Master Bill of Lading (MBL)</option>
+              <option value="bl_charter">🛳️ Charter Party B/L</option>
+            </optgroup>
+            <optgroup label="✈️ Air & Multimodal">
+              <option value="awb">✈️ Air Waybill (AWB)</option>
+              <option value="multimodal">🚛 Multimodal Transport Document</option>
+            </optgroup>
+            <optgroup label="📜 Certificates — شهادات">
+              <option value="co_eg">🇪🇬 Certificate of Origin — Egyptian</option>
+              <option value="co_arab">🌍 Certificate of Origin — Arab League</option>
+              <option value="co_eur">🇪🇺 EUR.1 Movement Certificate</option>
+              <option value="phyto">🌿 Phytosanitary Certificate</option>
+              <option value="halal">☪️ Halal Certificate</option>
+              <option value="health">❤️ Health Certificate</option>
+            </optgroup>
+            <optgroup label="📦 Commercial Docs — تجارية">
+              <option value="invoice">🧾 Commercial Invoice</option>
+              <option value="pl">📦 Packing List</option>
+              <option value="proforma">📝 Proforma Invoice</option>
+              <option value="draft_bl">🔏 Draft B/L (for approval)</option>
+            </optgroup>
+          </select>
+          <div id="doctype-info" class="hidden mt-2 p-2.5 rounded-xl text-xs" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);color:rgba(255,255,255,0.75)">
+            <span id="doctype-info-text"></span>
+          </div>
+        </div>
+        <!-- Logo Upload -->
+        <div>
+          <label class="block text-xs text-white/50 uppercase mb-1.5" id="lbl-logo">Company Logo (Optional)</label>
+          <div onclick="document.getElementById('logoInput').click()" class="border-2 border-dashed border-white/20 rounded-xl p-3 text-center cursor-pointer hover:border-cyan-400/50 hover:bg-white/5 transition">
+            <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="previewLogo(event)">
+            <img id="logoPreview" src="" style="max-height:48px;max-width:160px;object-fit:contain;display:none;margin:0 auto 4px">
+            <div id="logoTxt" class="text-white/40 text-xs"><i class="fa-solid fa-image text-xl mb-1 block"></i><span id="lbl-logo-click">Click to upload</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Template Cards -->
+      <div>
+        <label class="block text-xs text-white/50 uppercase mb-2" id="lbl-choose-tpl">Choose Template</label>
+        <div class="grid grid-cols-3 gap-3">
+          <!-- T1 Classic -->
+          <div onclick="selectTpl('t1')" id="tpl-t1" class="tpl-card selected">
+            <div class="h-20 bg-slate-100 flex flex-col items-center justify-center p-2 gap-1">
+              <div class="w-3/4 h-2 bg-blue-900 rounded"></div>
+              <div class="w-full h-px bg-blue-900 my-0.5"></div>
+              <div class="grid grid-cols-2 gap-1 w-full">
+                <div class="h-4 border border-gray-300 rounded bg-white"></div>
+                <div class="h-4 border border-gray-300 rounded bg-white"></div>
+              </div>
+              <div class="w-full h-3 bg-blue-900 rounded mt-0.5"></div>
+            </div>
+            <div class="p-2 text-center bg-slate-900/50">
+              <div class="text-xs font-bold text-white">Classic Navy</div>
+              <div class="text-[10px] text-white/40">رسمي كلاسيكي</div>
+            </div>
+          </div>
+          <!-- T2 Modern -->
+          <div onclick="selectTpl('t2')" id="tpl-t2" class="tpl-card">
+            <div class="h-20 bg-blue-950 flex flex-col">
+              <div class="bg-gradient-to-r from-blue-900 to-blue-700 px-2 py-1 flex justify-between items-center">
+                <div class="w-5 h-1.5 bg-white/30 rounded"></div>
+                <div class="text-[6px] font-black text-white tracking-widest">B/L</div>
+              </div>
+              <div class="h-0.5 bg-orange-400"></div>
+              <div class="flex-1 bg-white flex items-center justify-around px-2 gap-1">
+                <div class="flex-1 h-2 bg-gray-100 rounded"></div>
+                <span class="text-blue-700 text-xs font-bold">→</span>
+                <div class="flex-1 h-2 bg-gray-100 rounded"></div>
+              </div>
+            </div>
+            <div class="p-2 text-center bg-slate-900/50">
+              <div class="text-xs font-bold text-white">Modern Navy</div>
+              <div class="text-[10px] text-white/40">عصري مميز</div>
+            </div>
+          </div>
+          <!-- T3 Minimal -->
+          <div onclick="selectTpl('t3')" id="tpl-t3" class="tpl-card">
+            <div class="h-20 bg-white flex flex-col p-2">
+              <div class="flex justify-between border-b border-gray-200 pb-1 mb-1">
+                <div class="w-4 h-2 bg-blue-900 rounded"></div>
+                <div class="text-[7px] font-light text-gray-800">Bill of <strong class="text-blue-900">Lading</strong></div>
+              </div>
+              <div class="w-full h-1.5 bg-gray-100 rounded mb-1"></div>
+              <div class="w-3/4 h-1.5 bg-gray-100 rounded mb-1"></div>
+              <div class="w-full h-1.5 bg-gray-100 rounded"></div>
+            </div>
+            <div class="p-2 text-center bg-slate-900/50">
+              <div class="text-xs font-bold text-white">Minimal</div>
+              <div class="text-[10px] text-white/40">نظيف بسيط</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── CARD 2: Parties ─── -->
+    <div class="no-print glass rounded-2xl p-6 mb-5 border border-white/10">
+      <h3 class="text-sm font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2 mb-4">
+        <i class="fa-solid fa-users"></i>
+        <span id="lbl-parties-title" class="speakable">Parties</span>
+      </h3>
+
+      <!-- Shipper -->
+      <div class="bg-white/5 rounded-xl p-4 mb-3 border border-blue-500/10">
+        <p class="text-xs font-bold text-blue-300 speakable uppercase tracking-wider mb-3" id="lbl-shipper-hd">📤 Shipper / Exporter</p>
+        <textarea id="shipperName" rows="2" placeholder="Company name, full address, country..." class="form-inp mb-2" style="resize:vertical"></textarea>
+        <div class="grid grid-cols-2 gap-2">
+          <input type="text" id="shipperTax" placeholder="Tax ID / الرقم الضريبي" class="form-inp">
+          <input type="tel" id="shipperPhone" placeholder="Phone / الهاتف" class="form-inp">
+        </div>
+      </div>
+
+      <!-- Consignee -->
+      <div class="bg-white/5 rounded-xl p-4 mb-3 border border-cyan-500/10">
+        <p class="text-xs font-bold text-cyan-300 speakable uppercase tracking-wider mb-3" id="lbl-consignee-hd">📥 Consignee / Importer</p>
+        <textarea id="consigneeName" rows="2" placeholder="Company name, full address, country..." class="form-inp mb-2" style="resize:vertical"></textarea>
+        <div class="grid grid-cols-2 gap-2">
+          <input type="text" id="consigneeTax" placeholder="Tax ID / الرقم الضريبي" class="form-inp">
+          <input type="tel" id="consigneePhone" placeholder="Phone / الهاتف" class="form-inp">
+        </div>
+      </div>
+
+      <!-- Notify -->
+      <div class="bg-white/5 rounded-xl p-4 border border-amber-500/10">
+        <p class="text-xs font-bold text-amber-300 speakable uppercase tracking-wider mb-3" id="lbl-notify-hd">🔔 Notify Party</p>
+        <div class="grid grid-cols-2 gap-2">
+          <input type="text" id="notifyName" placeholder="Name or SAME AS CONSIGNEE" class="form-inp">
+          <input type="tel" id="notifyPhone" placeholder="Phone" class="form-inp">
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── CARD 3: Route ─── -->
+    <div class="no-print glass rounded-2xl p-6 mb-5 border border-white/10">
+      <h3 class="text-sm font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2 mb-4">
+        <i class="fa-solid fa-route"></i>
+        <span id="lbl-route-title" class="speakable">Route & Vessel</span>
+      </h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+            <label class="block text-xs text-white/50 mb-1.5" id="lbl-pol">Port of Loading (POL)</label>
+            <select id="polSelect" class="form-inp mb-2" onchange="onPOLChange(this.value)">
+              <option value="">-- Select Loading Port --</option>
+              <optgroup label="🇪🇬 Egypt — مصر">
+                <option value="Port Said">🚢 Port Said — بورسعيد</option>
+                <option value="Alexandria">🚢 Alexandria — الإسكندرية</option>
+                <option value="Damietta">🚢 Damietta — دمياط</option>
+                <option value="Sokhna Port">🚢 Sokhna Port — العين السخنة</option>
+                <option value="Suez">🚢 Suez — السويس</option>
+                <option value="Safaga">🚢 Safaga — سفاجا</option>
+              </optgroup>
+              <optgroup label="🌍 North Africa">
+                <option value="Tripoli Port, Libya">🇱🇾 Tripoli — ليبيا</option>
+                <option value="Tunis Port, Tunisia">🇹🇳 Tunis — تونس</option>
+                <option value="Algiers Port, Algeria">🇩🇿 Algiers — الجزائر</option>
+                <option value="Casablanca Port, Morocco">🇲🇦 Casablanca — المغرب</option>
+              </optgroup>
+              <optgroup label="🌴 Gulf">
+                <option value="Jebel Ali, Dubai">🇦🇪 Jebel Ali (Dubai)</option>
+                <option value="Jeddah Islamic Port">🇸🇦 Jeddah — السعودية</option>
+                <option value="Hamad Port, Qatar">🇶🇦 Hamad Port — قطر</option>
+                <option value="Shuaiba Port, Kuwait">🇰🇼 Shuaiba — الكويت</option>
+              </optgroup>
+              <optgroup label="🏳️ CIS">
+                <option value="Novorossiysk Port, Russia">🇷🇺 Novorossiysk — روسيا</option>
+                <option value="Odessa Port, Ukraine">🇺🇦 Odessa — أوكرانيا</option>
+                <option value="Batumi Port, Georgia">🇬🇪 Batumi — جورجيا</option>
+              </optgroup>
+              <option value="custom">✍️ Other — اكتب يدوياً</option>
+            </select>
+            <input type="text" id="pol" placeholder="Or type port name manually..." class="form-inp" style="display:none">
+            <div id="pol-selected" class="text-xs text-cyan-400/80 mt-1 hidden">
+              <i class="fa-solid fa-anchor text-[10px]"></i>
+              <span id="pol-selected-text"></span>
+            </div>
+          </div>
+        <div><label class="block text-xs text-white/50 mb-1" id="lbl-pod">Port of Discharge (POD)</label><input type="text" id="pod" placeholder="e.g. Novorossiysk, Hamburg" class="form-inp"></div>
+        <div><label class="block text-xs text-white/50 mb-1">Vessel / Voyage</label><input type="text" id="vessel" placeholder="e.g. MSC MAEVA / V240E" class="form-inp"></div>
+        <div class="sm:col-span-2">
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="block text-xs text-white/50" id="lbl-cont-type">Container(s) / الحاويات</label>
+            <button type="button" onclick="addContainerRow()" class="flex items-center gap-1 py-1 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition">
+              <i class="fa-solid fa-plus"></i><span>Add Container</span>
+            </button>
+          </div>
+          <div id="containersList" class="space-y-2"></div>
+        </div>
+        <div><label class="block text-xs text-white/50 mb-1">Date of Issue</label><input type="date" id="issueDate" class="form-inp"></div>
+        <div><label class="block text-xs text-white/50 mb-1">Place of Issue</label><input type="text" id="issuePlace" placeholder="e.g. Cairo, Egypt" class="form-inp"></div>
+        <div><label class="block text-xs text-white/50 mb-1">B/L Reference No.</label><input type="text" id="blRef" placeholder="e.g. BL-2026-001" class="form-inp"></div>
+      </div>
+
+      <!-- ─── Destination Country + Port ─── -->
+      <div class="mt-4 pt-4 border-t border-white/10 space-y-3">
+        <h4 class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-earth-africa"></i>
+          <span id="lbl-dest-section" class="speakable">Destination Country & Port</span>
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-white/50 mb-1.5" id="lbl-dest-country-lbl">Destination Country / بلد الوصول</label>
+            <select id="destCountry" class="form-inp" onchange="onDestCountryChange(this.value)">
+              <option value="">-- Select Country --</option>
+              <optgroup label="🌍 North Africa / شمال أفريقيا">
+                <option value="EG|Egypt|Port Said, Alexandria">🇪🇬 Egypt</option>
+                <option value="LY|Libya|Tripoli, Misrata, Benghazi">🇱🇾 Libya</option>
+                <option value="TN|Tunisia|Tunis, Sfax, Sousse">🇹🇳 Tunisia</option>
+                <option value="DZ|Algeria|Algiers, Oran, Annaba">🇩🇿 Algeria</option>
+                <option value="MA|Morocco|Casablanca, Tanger Med">🇲🇦 Morocco</option>
+                <option value="SD|Sudan|Port Sudan">🇸🇩 Sudan</option>
+              </optgroup>
+              <optgroup label="🌴 Gulf / الخليج">
+                <option value="AE|UAE|Jebel Ali (Dubai), Abu Dhabi">🇦🇪 UAE</option>
+                <option value="SA|Saudi Arabia|Jeddah, Dammam, Yanbu">🇸🇦 Saudi Arabia</option>
+                <option value="KW|Kuwait|Shuwaikh, Shuaiba">🇰🇼 Kuwait</option>
+                <option value="QA|Qatar|Hamad Port, Doha">🇶🇦 Qatar</option>
+                <option value="BH|Bahrain|Khalifa Bin Salman">🇧🇭 Bahrain</option>
+                <option value="OM|Oman|Sohar, Salalah, Muscat">🇴🇲 Oman</option>
+                <option value="JO|Jordan|Aqaba">🇯🇴 Jordan</option>
+              </optgroup>
+              <optgroup label="🏳️ CIS Countries">
+                <option value="RU|Russia|Novorossiysk, St. Petersburg">🇷🇺 Russia</option>
+                <option value="UA|Ukraine|Odessa, Chornomorsk">🇺🇦 Ukraine</option>
+                <option value="KZ|Kazakhstan|Aktau (Caspian)">🇰🇿 Kazakhstan</option>
+                <option value="AZ|Azerbaijan|Baku (Caspian)">🇦🇿 Azerbaijan</option>
+                <option value="GE|Georgia|Batumi, Poti">🇬🇪 Georgia</option>
+                <option value="AM|Armenia|Via Poti, Georgia">🇦🇲 Armenia</option>
+                <option value="UZ|Uzbekistan|Via Novorossiysk">🇺🇿 Uzbekistan</option>
+                <option value="BY|Belarus|Via Klaipeda, Riga">🇧🇾 Belarus</option>
+              </optgroup>
+              <optgroup label="🇪🇺 Europe / أوروبا">
+                <option value="DE|Germany|Hamburg, Bremen, Bremerhaven">🇩🇪 Germany</option>
+                <option value="NL|Netherlands|Rotterdam">🇳🇱 Netherlands</option>
+                <option value="FR|France|Marseille, Le Havre">🇫🇷 France</option>
+                <option value="IT|Italy|Genoa, La Spezia, Naples">🇮🇹 Italy</option>
+                <option value="ES|Spain|Valencia, Barcelona, Algeciras">🇪🇸 Spain</option>
+                <option value="PL|Poland|Gdansk, Gdynia">🇵🇱 Poland</option>
+                <option value="BE|Belgium|Antwerp, Ghent">🇧🇪 Belgium</option>
+                <option value="SE|Sweden|Gothenburg">🇸🇪 Sweden</option>
+                <option value="PT|Portugal|Lisbon, Sines">🇵🇹 Portugal</option>
+                <option value="RO|Romania|Constanta">🇷🇴 Romania</option>
+                <option value="GR|Greece|Piraeus, Thessaloniki">🇬🇷 Greece</option>
+                <option value="TR|Turkey|Mersin, Istanbul, Izmir">🇹🇷 Turkey</option>
+                <option value="GB|UK|Felixstowe, Southampton">🇬🇧 UK</option>
+              </optgroup>
+              <optgroup label="🌍 East & South Africa / أفريقيا">
+                <option value="KE|Kenya|Mombasa">🇰🇪 Kenya</option>
+                <option value="TZ|Tanzania|Dar es Salaam">🇹🇿 Tanzania</option>
+                <option value="ZA|South Africa|Durban, Cape Town">🇿🇦 South Africa</option>
+                <option value="ET|Ethiopia|Via Djibouti">🇪🇹 Ethiopia</option>
+                <option value="NG|Nigeria|Lagos, Apapa">🇳🇬 Nigeria</option>
+                <option value="GH|Ghana|Tema, Takoradi">🇬🇭 Ghana</option>
+                <option value="MZ|Mozambique|Maputo, Beira">🇲🇿 Mozambique</option>
+              </optgroup>
+              <optgroup label="🌎 Americas / الأمريكتين">
+                <option value="US|USA|New York, Los Angeles, Houston">🇺🇸 USA</option>
+                <option value="CA|Canada|Montreal, Vancouver">🇨🇦 Canada</option>
+                <option value="BR|Brazil|Santos, Rio de Janeiro">🇧🇷 Brazil</option>
+                <option value="AR|Argentina|Buenos Aires">🇦🇷 Argentina</option>
+                <option value="MX|Mexico|Veracruz, Manzanillo">🇲🇽 Mexico</option>
+                <option value="CL|Chile|San Antonio, Valparaíso">🇨🇱 Chile</option>
+              </optgroup>
+              <optgroup label="🌏 Asia / آسيا">
+                <option value="CN|China|Shanghai, Shenzhen, Tianjin">🇨🇳 China</option>
+                <option value="IN|India|Mumbai, Chennai, Nhava Sheva">🇮🇳 India</option>
+                <option value="JP|Japan|Tokyo, Osaka, Yokohama">🇯🇵 Japan</option>
+                <option value="SG|Singapore|Port of Singapore">🇸🇬 Singapore</option>
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-white/50 mb-1.5" id="lbl-dest-port-lbl">
+              Destination Port / ميناء الوصول
+              <span class="text-[10px] text-cyan-400/70 ml-1">(auto-filled or edit)</span>
+            </label>
+            <div class="relative">
+              <input type="text" id="destPort" placeholder="Select country above or type port..." class="form-inp">
+              <div id="destPort-hint" class="hidden mt-1.5 text-[11px] text-cyan-400/80 flex items-center gap-1.5">
+                <i class="fa-solid fa-anchor text-[10px]"></i>
+                <span id="destPort-hint-text"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Freight Forwarder Toggle -->
+      <div class="mt-4 pt-4 border-t border-white/10">
+        <div class="toggle-wrap" onclick="toggleFF()">
+          <div class="sw" id="ff-sw"></div>
+          <div>
+            <div class="text-sm font-semibold text-white/80" id="lbl-ff-toggle">Freight Forwarder Details</div>
+            <div class="text-xs text-white/40" id="lbl-ff-sub">Optional — وكيل الشحن</div>
+          </div>
+        </div>
+        <div id="ff-fields" class="hidden mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div><label class="block text-xs text-white/50 mb-1">Forwarder Name</label><input type="text" id="ffName" placeholder="Company name" class="form-inp"></div>
+          <div><label class="block text-xs text-white/50 mb-1">Freight Terms</label>
+            <select id="ffTerms" class="form-inp"><option value="">Select...</option><option value="Prepaid">Freight Prepaid</option><option value="Collect">Freight Collect</option><option value="As Arranged">As Arranged</option></select></div>
+          <div><label class="block text-xs text-white/50 mb-1">Incoterms</label>
+            <select id="ffInco" class="form-inp"><option value="">Select...</option><option>FOB</option><option>CIF</option><option>CFR</option><option>EXW</option><option>DDP</option><option>DAP</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── CARD 4: Goods + HS Code ─── -->
+    <div class="no-print glass rounded-2xl p-6 mb-5 border border-white/10">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-box-open"></i>
+          <span id="lbl-goods-title" class="speakable">Goods + HS Code</span>
+        </h3>
+        <button onclick="addGoodsRow()" class="flex items-center gap-1.5 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition">
+          <i class="fa-solid fa-plus"></i><span id="lbl-add-row">Add Row</span>
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-white/10">
+              <th class="text-left text-xs text-white/40 uppercase pb-2 pr-1 min-w-[150px]" id="th-product">Product</th>
+              <th class="text-left text-xs text-white/40 uppercase pb-2 pr-1 w-28" id="th-hs">HS Code</th>
+              <th class="text-left text-xs text-white/40 uppercase pb-2 pr-1 min-w-[140px]" id="th-desc">Description</th>
+              <th class="text-left text-xs text-white/40 uppercase pb-2 pr-1 w-24" id="th-pkgs">Packages</th>
+              <th class="text-left text-xs text-white/40 uppercase pb-2 pr-1 w-24" id="th-wt">Weight</th>
+              <th class="text-left text-xs text-white/40 uppercase pb-2 w-20" id="th-cbm">CBM</th>
+              <th class="w-8"></th>
+            </tr>
+          </thead>
+          <tbody id="goodsTbody">
+            <!-- default row added by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── CARD 5: IMO ─── -->
+    <div class="no-print glass rounded-2xl p-6 mb-5 border border-white/10">
+      <div class="toggle-wrap" onclick="toggleIMO()">
+        <div class="sw" id="imo-sw"></div>
+        <div>
+          <span class="text-sm font-semibold text-amber-300">⚠️ IMO / Dangerous Goods</span>
+          <span class="block text-xs text-white/40" id="lbl-imo-sub">Enable if shipment contains hazardous materials</span>
+        </div>
+      </div>
+      <div id="imo-fields" class="hidden mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><label class="block text-xs text-white/50 mb-1">IMO Class / UN Number</label><input type="text" id="imoClass" placeholder="e.g. Class 3 / UN1993" class="form-inp"></div>
+        <div><label class="block text-xs text-white/50 mb-1">Proper Shipping Name</label><input type="text" id="imoName" placeholder="e.g. Flammable Liquid NOS" class="form-inp"></div>
+        <div><label class="block text-xs text-white/50 mb-1">Packing Group</label>
+          <select id="imoPG" class="form-inp"><option value="">Select...</option><option value="PG I">PG I — High Danger</option><option value="PG II">PG II — Medium Danger</option><option value="PG III">PG III — Low Danger</option></select></div>
+        <div><label class="block text-xs text-white/50 mb-1">Flash Point</label><input type="text" id="imoFlash" placeholder="e.g. -18°C" class="form-inp"></div>
+      </div>
+    </div>
+
+    <!-- ─── CARD 6: Signature + Stamp + Remarks ─── -->
+    <div class="no-print glass rounded-2xl p-6 mb-5 border border-white/10">
+      <h3 class="text-sm font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2 mb-4">
+        <i class="fa-solid fa-signature"></i>
+        <span>Signature & Remarks</span>
+      </h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><label class="block text-xs text-white/50 mb-1" id="lbl-signatory">Signatory</label><input type="text" id="signatory" placeholder="e.g. ABC LOGISTICS — JOHN SMITH" class="form-inp"></div>
+        <div>
+          <label class="block text-xs text-white/50 mb-1">Stamp / Signature Image</label>
+          <div onclick="document.getElementById('stampInput').click()" class="border-2 border-dashed border-white/20 rounded-xl p-2.5 text-center cursor-pointer hover:border-cyan-400/50 hover:bg-white/5 transition">
+            <input type="file" id="stampInput" accept="image/*" style="display:none" onchange="previewStamp(event)">
+            <img id="stampPreview" src="" style="max-height:36px;object-fit:contain;display:none;margin:0 auto 3px">
+            <div id="stampTxt" class="text-white/40 text-xs"><i class="fa-solid fa-stamp mb-0.5 block"></i>Upload stamp</div>
+          </div>
+        </div>
+        <div class="sm:col-span-2"><label class="block text-xs text-white/50 mb-1" id="lbl-remarks">Special Instructions / Remarks</label>
+          <textarea id="remarks" rows="2" placeholder="e.g. KEEP REFRIGERATED AT +4°C / FRAGILE" class="form-inp" style="resize:vertical"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── GENERATE BUTTON ─── -->
+    <button onclick="generateDoc()" class="no-print w-full py-4 rounded-xl bg-gradient-to-r from-cyan-600 via-blue-600 to-violet-600 font-bold text-sm hover:opacity-90 transition shadow-lg mb-6 flex items-center justify-center gap-2">
+      <i class="fa-solid fa-file-invoice"></i>
+      <span id="lbl-generate-btn" class="speakable">Generate Document — Preview & Download</span>
+    </button>
+
+    <!-- ─── OUTPUT SECTION ─── -->
+    <div id="output-section" class="hidden mb-8">
+      <div class="no-print glass rounded-2xl p-5 border border-white/10 mb-4">
+        <div class="flex justify-between items-center flex-wrap gap-3">
+          <h3 class="text-sm font-bold text-emerald-400 flex items-center gap-2">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="lbl-doc-ready" class="speakable">Document Ready!</span>
+          </h3>
+          <div class="flex gap-2 flex-wrap">
+            <button onclick="window.print()" class="flex items-center gap-2 py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition">
+              <i class="fa-solid fa-print"></i><span id="lbl-print-btn" class="speakable">Print / Save PDF</span>
+            </button>
+            <button onclick="downloadExcel()" class="flex items-center gap-2 py-2 px-4 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl transition">
+              <i class="fa-solid fa-file-excel"></i><span id="lbl-excel-btn">📊 Excel + Macro</span>
+            </button>
+            <button onclick="showQRCode()" class="flex items-center gap-2 py-2 px-4 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl transition">
+              <i class="fa-solid fa-qrcode"></i><span id="lbl-qr-btn">📱 QR Code</span>
+            </button>
+            <button onclick="sendStructuredEmail()" class="flex items-center gap-2 py-2 px-4 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl transition">
+              <i class="fa-solid fa-envelope-open-text"></i><span id="lbl-struct-email-btn">📧 Structured Email</span>
+            </button>
+            <button onclick="sendByEmail()" class="flex items-center gap-2 py-2 px-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition">
+              <i class="fa-solid fa-paper-plane"></i><span id="lbl-send-btn">Send by Email</span>
+            </button>
+            <button onclick="document.getElementById('output-section').classList.add('hidden')" class="flex items-center gap-2 py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-xl transition no-print">
+              <i class="fa-solid fa-pencil"></i><span>Edit</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- The actual document -->
+      <div id="print-area" class="bg-white text-black rounded-2xl overflow-hidden shadow-2xl p-1"></div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="no-print w-full border-t border-white/10 py-8 bg-slate-950/90 backdrop-blur-md relative z-10">
+    <div class="max-w-3xl mx-auto px-6 text-center">
+      <p class="text-xs text-white/30 font-mono">© 2026 Shipping Doc Generator</p>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let currentLang = 'en';
+let activeTpl = 't1';
+let logoDataURL = null;
+let stampDataURL = null;
+let ffOpen = false;
+let imoOpen = false;
+let rowCount = 0;
+
+// ── Read URL param for pre-selected template ──
+const urlTpl = new URLSearchParams(window.location.search).get('tpl');
+if (urlTpl === 'classic') activeTpl = 't1';
+else if (urlTpl === 'modern') activeTpl = 't2';
+else if (urlTpl === 'minimal') activeTpl = 't3';
+
+// ── HS Code Database ──
+const hsDB = {
+  orange:     { code:'0805.10', en:'Fresh Oranges',         ar:'برتقال طازج' },
+  lemon:      { code:'0805.20', en:'Fresh Lemons',          ar:'ليمون طازج' },
+  mango:      { code:'0804.50', en:'Fresh Mangoes',         ar:'مانجو طازج' },
+  grape:      { code:'0806.10', en:'Fresh Grapes',          ar:'عنب طازج' },
+  strawberry: { code:'0810.10', en:'Fresh Strawberries',    ar:'فراولة طازجة' },
+  pomegranate:{ code:'0810.90', en:'Fresh Pomegranates',    ar:'رمان طازج' },
+  fig:        { code:'0804.20', en:'Fresh Figs',            ar:'تين طازج' },
+  date:       { code:'0804.10', en:'Fresh Dates',           ar:'تمر طازج' },
+  potato:     { code:'0701.90', en:'Fresh Potatoes',        ar:'بطاطس طازجة' },
+  onion:      { code:'0703.10', en:'Fresh Onions',          ar:'بصل طازج' },
+  garlic:     { code:'0703.20', en:'Fresh Garlic',          ar:'ثوم طازج' },
+  tomato:     { code:'0702.00', en:'Fresh Tomatoes',        ar:'طماطم طازجة' },
+  pepper:     { code:'0709.60', en:'Fresh Peppers',         ar:'فلفل طازج' },
+  wheat:      { code:'1001.99', en:'Wheat (Milling Grade)', ar:'قمح طحين' },
+  corn:       { code:'1005.90', en:'Maize / Corn',          ar:'ذرة' },
+  rice:       { code:'1006.30', en:'Semi-Milled Rice',      ar:'أرز' },
+  barley:     { code:'1003.90', en:'Barley Grain',          ar:'شعير' },
+  seeds:      { code:'1209.91', en:'Agricultural Seeds',    ar:'بذور زراعية' },
+  steel:      { code:'7213.10', en:'Iron/Steel Bars',       ar:'حديد تسليح' },
+  aluminum:   { code:'7601.10', en:'Unwrought Aluminium',   ar:'ألومنيوم خام' },
+  copper:     { code:'7401.00', en:'Copper',                ar:'نحاس' },
+  marble:     { code:'6802.21', en:'Marble Slabs',          ar:'رخام مقطوع' },
+  granite:    { code:'6802.23', en:'Granite Slabs',         ar:'جرانيت مقطوع' },
+  cement:     { code:'2523.29', en:'Portland Cement',       ar:'أسمنت' },
+  cotton:     { code:'5201.00', en:'Raw Cotton',            ar:'قطن خام' },
+  fabric:     { code:'5208.11', en:'Woven Cotton Fabric',   ar:'أقمشة قطنية' },
+  garment:    { code:'6101.20', en:'Garments / Clothing',   ar:'ملابس' },
+  fertilizer: { code:'3102.10', en:'Urea Fertilizer',       ar:'أسمدة' },
+  chemical:   { code:'2804.10', en:'Chemical Compounds',    ar:'مواد كيماوية' },
+};
+
+// ════════════════════════════════════════════════
+// TEMPLATE
+// ════════════════════════════════════════════════
+function selectTpl(id) {
+  activeTpl = id;
+  ['t1','t2','t3'].forEach(t => {
+    const el = document.getElementById('tpl-' + t);
+    el.classList.remove('selected');
+    el.style.borderColor = '';
+  });
+  const sel = document.getElementById('tpl-' + id);
+  sel.classList.add('selected');
+}
+
+// ════════════════════════════════════════════════
+// LOGO / STAMP
+// ════════════════════════════════════════════════
+function previewLogo(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    logoDataURL = ev.target.result;
+    document.getElementById('logoPreview').src = logoDataURL;
+    document.getElementById('logoPreview').style.display = 'block';
+    document.getElementById('logoTxt').style.display = 'none';
+  };
+  r.readAsDataURL(f);
+}
+function previewStamp(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    stampDataURL = ev.target.result;
+    document.getElementById('stampPreview').src = stampDataURL;
+    document.getElementById('stampPreview').style.display = 'block';
+    document.getElementById('stampTxt').style.display = 'none';
+  };
+  r.readAsDataURL(f);
+}
+
+// ════════════════════════════════════════════════
+// TOGGLES
+// ════════════════════════════════════════════════
+function toggleFF() {
+  ffOpen = !ffOpen;
+  const sw = document.getElementById('ff-sw');
+  const fields = document.getElementById('ff-fields');
+  sw.classList.toggle('on', ffOpen);
+  fields.classList.toggle('hidden', !ffOpen);
+}
+function toggleIMO() {
+  imoOpen = !imoOpen;
+  const sw = document.getElementById('imo-sw');
+  const fields = document.getElementById('imo-fields');
+  sw.classList.toggle('on', imoOpen);
+  fields.classList.toggle('hidden', !imoOpen);
+}
+
+
+// ════════════════════════════════════════════════
+// CONTAINERS (multi-container support)
+// ════════════════════════════════════════════════
+let containerRowCount = 0;
+const CONTAINER_OPTIONS = '\n            <option value="">-- Select --</option>\n            <option value="20\' DRY">📦 20\' Dry General</option>\n            <option value="40\' DRY">📦 40\' Dry General</option>\n            <option value="40\' HC">📦 40\' High Cube</option>\n            <option value="20\' RF">❄️ 20\' Reefer</option>\n            <option value="40\' RF">❄️ 40\' Reefer</option>\n            <option value="20\' OT">🔓 20\' Open Top</option>\n            <option value="40\' OT">🔓 40\' Open Top</option>\n            <option value="20\' FR">🏗️ 20\' Flat Rack</option>\n            <option value="40\' FR">🏗️ 40\' Flat Rack</option>\n            <option value="Bulk">🌾 Bulk Cargo</option>\n            <option value="LCL">📊 LCL</option>\n          ';
+
+function addContainerRow() {
+  containerRowCount++;
+  const id = containerRowCount;
+  const div = document.createElement('div');
+  div.className = 'grid grid-cols-[1fr_1fr_auto] gap-2 items-center';
+  div.id = 'cr-' + id;
+  div.innerHTML =
+    '<select id="ctype-' + id + '" class="form-inp">' + CONTAINER_OPTIONS + '</select>' +
+    '<input type="text" id="cno-' + id + '" class="form-inp" placeholder="Container No. / Seal No. — e.g. MEDU1234567 / SE-987654">' +
+    '<button type="button" onclick="document.getElementById(\'cr-' + id + '\').remove()" class="text-rose-400 hover:text-rose-300 transition text-sm px-2 py-2" title="Remove">✕</button>';
+  document.getElementById('containersList').appendChild(div);
+}
+
+function collectContainers() {
+  return Array.from(document.querySelectorAll('#containersList > div')).map(function(div) {
+    const id = div.id.replace('cr-', '');
+    const t = (document.getElementById('ctype-' + id) || {}).value || '';
+    const n = (document.getElementById('cno-' + id) || {}).value || '';
+    return { type: escapeHTML(t), no: escapeHTML(n) };
+  }).filter(function(c) { return c.type || c.no; });
+}
+
+function containersStr(containers) {
+  if (!containers || !containers.length) return '—';
+  return containers.map(function(c) {
+    return [c.type, c.no].filter(Boolean).join(' | ');
+  }).join('\n');
+}
+
+function containersHTML(containers) {
+  if (!containers || !containers.length) return '—';
+  return containers.map(function(c) {
+    const t = [c.type, c.no].filter(Boolean).join(' | ');
+    return '<div style="font-size:11px;font-weight:600">' + (t || '—') + '</div>';
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+// GOODS TABLE
+// ════════════════════════════════════════════════
+function buildProductOptions() {
+  return `<option value="custom">✍️ Custom / مخصص</option>
+    <optgroup label="🍊 Fruits"><option value="orange">🍊 Oranges / برتقال</option><option value="lemon">🍋 Lemons</option><option value="mango">🥭 Mango</option><option value="grape">🍇 Grapes</option><option value="strawberry">🍓 Strawberries / فراولة</option><option value="pomegranate">Pomegranate / رمان</option><option value="fig">Figs / تين</option><option value="date">Dates / تمر</option></optgroup>
+    <optgroup label="🥦 Vegetables"><option value="potato">🥔 Potatoes / بطاطس</option><option value="onion">🧅 Onions / بصل</option><option value="garlic">🧄 Garlic / ثوم</option><option value="tomato">🍅 Tomatoes / طماطم</option><option value="pepper">Pepper / فلفل</option></optgroup>
+    <optgroup label="🌾 Grains"><option value="wheat">🌾 Wheat / قمح</option><option value="corn">🌽 Corn / ذرة</option><option value="rice">Rice / أرز</option><option value="barley">Barley / شعير</option><option value="seeds">Seeds / بذور</option></optgroup>
+    <optgroup label="🏭 Industrial"><option value="steel">Steel / حديد</option><option value="aluminum">Aluminum / ألومنيوم</option><option value="copper">Copper / نحاس</option><option value="marble">Marble / رخام</option><option value="granite">Granite / جرانيت</option><option value="cement">Cement / أسمنت</option></optgroup>
+    <optgroup label="🧶 Textiles"><option value="cotton">Cotton / قطن</option><option value="fabric">Fabric / أقمشة</option><option value="garment">Garments / ملابس</option></optgroup>
+    <optgroup label="⚗️ Chemicals"><option value="fertilizer">Fertilizer / أسمدة</option><option value="chemical">Chemicals / كيماويات</option></optgroup>`;
+}
+
+function addGoodsRow() {
+  rowCount++;
+  const tbody = document.getElementById('goodsTbody');
+  const tr = document.createElement('tr');
+  tr.className = 'border-b border-white/5';
+  tr.id = 'gr-' + rowCount;
+  tr.innerHTML = `
+    <td class="pb-1.5 pr-1 align-top">
+      <select onchange="autoHS(this)" class="tbl-sel">${buildProductOptions()}</select>
+      <div class="hs-hint" id="hh-${rowCount}">
+        HS: <span id="hv-${rowCount}" style="font-family:monospace;font-weight:700;background:rgba(16,185,129,0.2);padding:1px 6px;border-radius:3px"></span>
+        <span id="hl-${rowCount}" style="opacity:0.7;font-size:10px"></span>
+      </div>
+    </td>
+    <td class="pb-1.5 pr-1 align-top"><input type="text" id="hs-${rowCount}" class="tbl-inp" placeholder="0000.00" style="font-family:monospace;color:#fbbf24"></td>
+    <td class="pb-1.5 pr-1 align-top"><input type="text" id="desc-${rowCount}" class="tbl-inp" placeholder="Description..."></td>
+    <td class="pb-1.5 pr-1 align-top"><input type="text" id="pkgs-${rowCount}" class="tbl-inp" placeholder="24 Pallets"></td>
+    <td class="pb-1.5 pr-1 align-top"><input type="text" id="wt-${rowCount}" class="tbl-inp" placeholder="22,400 KGS"></td>
+    <td class="pb-1.5 pr-1 align-top"><input type="text" id="cbm-${rowCount}" class="tbl-inp" placeholder="28.5"></td>
+    <td class="pb-1.5 align-top"><button onclick="document.getElementById('gr-${rowCount}').remove()" class="text-rose-400 hover:text-rose-300 transition text-xs mt-1.5 px-1">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+
+function autoHS(sel) {
+  const row = sel.closest('tr');
+  if (!row) return;
+  const id = row.id.replace('gr-','');
+  const val = sel.value;
+  if (val === 'custom' || !val) { document.getElementById('hh-'+id).classList.remove('show'); return; }
+  const d = hsDB[val]; if (!d) return;
+  document.getElementById('hs-'+id).value = d.code;
+  if (!document.getElementById('desc-'+id).value) {
+    document.getElementById('desc-'+id).value = currentLang === 'ar' ? d.ar : d.en;
+  }
+  document.getElementById('hv-'+id).textContent = d.code;
+  document.getElementById('hl-'+id).textContent = d.en;
+  document.getElementById('hh-'+id).classList.add('show');
+}
+
+function collectGoods() {
+  const rows = document.querySelectorAll('#goodsTbody tr');
+  return Array.from(rows).map(tr => {
+    const id = tr.id.replace('gr-','');
+    return {
+      hs:   (document.getElementById('hs-'+id)||{}).value||'',
+      desc: (document.getElementById('desc-'+id)||{}).value||'',
+      pkgs: (document.getElementById('pkgs-'+id)||{}).value||'',
+      wt:   (document.getElementById('wt-'+id)||{}).value||'',
+      cbm:  (document.getElementById('cbm-'+id)||{}).value||'',
+    };
+  });
+}
+
+// ════════════════════════════════════════════════
+// DATA COLLECTION
+// ════════════════════════════════════════════════
+function gv(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+// تعقيم أي نص قبل حقنه داخل innerHTML لمنع XSS — يحوّل < > & " ' إلى كيانات HTML آمنة
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+
+// تعقيم قيمة Data URL (للوجو/الختم) — يقبل فقط data:image/...;base64,<base64 نقي> بالكامل
+// (لا يُسمح بـ SVG لأنه قد يحتوي على <script> قابل للتنفيذ، ويُرفض أي محتوى بعد الـ base64 الصافي)
+function sanitizeImageDataURL(url) {
+  if (!url) return null;
+  const m = /^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/\r\n]+=*$/i.exec(String(url).trim());
+  return m ? m[0] : null;
+}
+
+function collectData() {
+  const g = (id) => escapeHTML(gv(id));
+  return {
+    docType:    gv('docType'), // قيمة من <select> ثابتة، ليست نص حر — لا تحتاج تعقيم
+    tpl:        activeTpl,
+    logo:       sanitizeImageDataURL(logoDataURL),
+    stamp:      sanitizeImageDataURL(stampDataURL),
+    shipper:    { name:g('shipperName'), tax:g('shipperTax'), phone:g('shipperPhone') },
+    consignee:  { name:g('consigneeName'), tax:g('consigneeTax'), phone:g('consigneePhone') },
+    notify:     { name:g('notifyName'), phone:g('notifyPhone') },
+    pol:        escapeHTML((function(){ const sel = document.getElementById('polSelect'); const manual = document.getElementById('pol'); if(sel && sel.value && sel.value !== 'custom') return sel.value; return manual ? manual.value : ''; })()),
+    pod:        g('pod'), vessel:g('vessel'),
+    containers: collectContainers(),
+    issueDate:  g('issueDate'), issuePlace:g('issuePlace'),
+    blRef:      g('blRef') || ('BL-' + Date.now().toString().slice(-8)),
+    ff:  ffOpen  ? { name:g('ffName'), terms:gv('ffTerms'), inco:gv('ffInco') } : null,
+    imo: imoOpen ? { cls:g('imoClass'), name:g('imoName'), pg:gv('imoPG'), flash:g('imoFlash') } : null,
+    signatory:    g('signatory'),
+    remarks:      g('remarks'),
+    destCountry:  escapeHTML(gv('destCountry').split('|')[1] || ''),
+    destPort:     g('destPort'),
+    goods:        collectGoods().map(function(row) {
+      const out = {};
+      Object.keys(row).forEach(function(k) { out[k] = escapeHTML(row[k]); });
+      return out;
+    }),
+  };
+}
+
+// ════════════════════════════════════════════════
+// DOCUMENT BUILDERS
+// ════════════════════════════════════════════════
+
+function partyStr(p) {
+  let s = p.name || '—';
+  if (p.tax)   s += '\nTax ID: ' + p.tax;
+  if (p.phone) s += '\nTel: ' + p.phone;
+  return s;
+}
+
+function logoHTML(logo) {
+  return logo
+    ? `<img src="${logo}" style="max-height:55px;max-width:160px;object-fit:contain;">`
+    : `<div style="font-size:18px;font-weight:900;color:#1a3a5c;">YOUR LOGO</div>`;
+}
+
+function stampHTML(stamp) {
+  return stamp
+    ? `<img src="${stamp}" style="max-height:55px;object-fit:contain;">`
+    : `<div style="width:80px;height:50px;border:1px dashed #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa">STAMP</div>`;
+}
+
+function goodsRows(goods) {
+  return goods.map(g => `<tr style="border-bottom:1px solid #e2e8f0">
+    <td style="padding:6px 8px;font-size:11px">${g.hs ? `<span style="font-family:monospace;font-weight:700;color:#b45309;background:#fef3c7;padding:1px 5px;border-radius:3px;margin-right:5px">${g.hs}</span>` : ''}${g.desc||'—'}</td>
+    <td style="padding:6px 8px;font-size:11px;text-align:center">${g.pkgs||'—'}</td>
+    <td style="padding:6px 8px;font-size:11px">${g.wt||'—'}</td>
+    <td style="padding:6px 8px;font-size:11px;text-align:center">${g.cbm||'—'}</td>
+  </tr>`).join('');
+}
+
+function imoBlock(imo) {
+  if (!imo || !imo.cls) return '';
+  return `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:4px;padding:8px 10px;margin-bottom:10px">
+    <div style="font-size:8px;font-weight:700;color:#ea580c;text-transform:uppercase;margin-bottom:5px">⚠️ IMO DANGEROUS GOODS DECLARATION</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;font-size:11px">
+      <div><div style="font-size:8px;color:#999">IMO Class / UN No.</div><b>${imo.cls}</b></div>
+      <div><div style="font-size:8px;color:#999">Proper Name</div>${imo.name||'—'}</div>
+      <div><div style="font-size:8px;color:#999">Packing Group</div>${imo.pg||'—'}</div>
+      <div><div style="font-size:8px;color:#999">Flash Point</div>${imo.flash||'—'}</div>
+    </div>
+  </div>`;
+}
+
+function ffBlock(ff) {
+  if (!ff || !ff.name) return '';
+  return `<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:4px;padding:7px 10px;margin-bottom:10px">
+    <div style="font-size:8px;font-weight:700;color:#475569;text-transform:uppercase;margin-bottom:4px">FREIGHT FORWARDING</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:11px">
+      <div><div style="font-size:8px;color:#999">Forwarder</div>${ff.name}</div>
+      <div><div style="font-size:8px;color:#999">Terms</div>${ff.terms||'—'}</div>
+      <div><div style="font-size:8px;color:#999">Incoterms</div>${ff.inco||'—'}</div>
+    </div>
+  </div>`;
+}
+
+const TABLE_HEAD = `<thead><tr style="background:#1a3a5c;color:white">
+  <th style="padding:7px 9px;font-size:10px;text-align:left">Description of Goods</th>
+  <th style="padding:7px 9px;font-size:10px;text-align:center">Packages</th>
+  <th style="padding:7px 9px;font-size:10px;text-align:left">Gross Weight</th>
+  <th style="padding:7px 9px;font-size:10px;text-align:center">CBM</th>
+</tr></thead>`;
+
+// ── Template 1: Classic Navy ──
+function buildT1(d) {
+  const docTitles = d._titles || {};
+  const title = docTitles[d.docType] || 'BILL OF LADING';
+  return `<div style="font-family:Arial,sans-serif;font-size:12px;color:#1a202c;max-width:820px;margin:0 auto;padding:24px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a3a5c;padding-bottom:12px;margin-bottom:12px">
+      <div>${logoHTML(d.logo)}</div>
+      <div style="text-align:center"><div style="font-size:20px;font-weight:900;color:#1a3a5c;letter-spacing:2px">${title}</div><div style="font-size:10px;color:#666;letter-spacing:1px">Original — Not Negotiable</div></div>
+      <div style="text-align:right;font-size:11px;max-width:220px"><div style="font-weight:700;color:#1a3a5c">${d._doctypeLabel||""}</div><div style="color:#888">${d.issueDate||''}</div>${d.issuePlace?`<div style="color:#888;font-size:10px">${d.issuePlace}</div>`:''}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="border:1px solid #cbd5e0;border-radius:4px;padding:7px 9px"><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#a0aec0;text-transform:uppercase;margin-bottom:3px">SHIPPER / EXPORTER</div><div style="font-size:11px;font-weight:600;white-space:pre-wrap">${partyStr(d.shipper)}</div></div>
+      <div style="border:1px solid #cbd5e0;border-radius:4px;padding:7px 9px"><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#a0aec0;text-transform:uppercase;margin-bottom:3px">CONSIGNEE</div><div style="font-size:11px;font-weight:600;white-space:pre-wrap">${partyStr(d.consignee)}</div></div>
+      <div style="border:1px solid #cbd5e0;border-radius:4px;padding:7px 9px"><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#a0aec0;text-transform:uppercase;margin-bottom:3px">NOTIFY PARTY</div><div style="font-size:11px">${d.notify.name||'—'}${d.notify.phone?'\nTel: '+d.notify.phone:''}</div></div>
+      <div style="border:1px solid #cbd5e0;border-radius:4px;padding:7px 9px"><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#a0aec0;text-transform:uppercase;margin-bottom:3px">VESSEL / VOYAGE</div><div style="font-size:11px;font-weight:600">${d.vessel||'—'}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="border:1px solid #cbd5e0;border-radius:4px;padding:7px 9px"><div style="font-size:8px;color:#a0aec0;text-transform:uppercase;margin-bottom:2px">PORT OF LOADING</div><div style="font-size:12px;font-weight:700;color:#1a3a5c">${d.pol||'—'}</div></div>
+      <div style="border:1px solid #cbd5e0;border-radius:4px;padding:7px 9px"><div style="font-size:8px;color:#a0aec0;text-transform:uppercase;margin-bottom:2px">PORT OF DISCHARGE</div><div style="font-size:12px;font-weight:700;color:#1a3a5c">${d.pod||'—'}</div></div>
+      <div style="border:1px solid #cbd5e0;border-radius:4px;padding:7px 9px"><div style="font-size:8px;color:#a0aec0;text-transform:uppercase;margin-bottom:2px">CONTAINER TYPE / NO.</div><div style="font-size:11px;font-weight:600">${containersHTML(d.containers)}</div></div>
+    </div>
+    ${imoBlock(d.imo)}${ffBlock(d.ff)}
+    <table style="width:100%;border-collapse:collapse;margin-bottom:10px">${TABLE_HEAD}<tbody>${goodsRows(d.goods)}</tbody></table>
+    ${d.remarks?`<div style="background:#f7fafc;border:1px solid #e2e8f0;border-radius:4px;padding:7px 9px;margin-bottom:10px;font-size:11px"><b>Special Instructions: </b>${d.remarks}</div>`:''}
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;border-top:2px solid #1a3a5c;padding-top:10px">
+      <div style="font-size:10px;color:#a0aec0"><div>Issue Date: ${d.issueDate||'—'}</div><div>Signatory: ${d.signatory||'—'}</div></div>
+      <div style="text-align:center">${stampHTML(d.stamp)}<div style="font-size:9px;color:#a0aec0;margin-top:3px">Authorized Signature & Stamp</div></div>
+    </div>
+  </div>`;
+}
+
+// ── Template 2: Modern Navy ──
+function buildT2(d) {
+  const docTitles = d._titles || {};
+  const title = docTitles[d.docType] || 'BILL OF LADING';
+  return `<div style="font-family:Arial,sans-serif;font-size:12px;color:#111;max-width:820px;margin:0 auto">
+    <div style="background:linear-gradient(135deg,#1a3a5c 0%,#2563eb 100%);color:white;padding:18px 24px;display:flex;justify-content:space-between;align-items:center">
+      <div>${logoHTML(d.logo)}</div>
+      <div style="text-align:right"><div style="font-size:18px;font-weight:900;letter-spacing:2px">${title}</div><div style="font-size:10px;opacity:0.65;margin-top:2px">${d._doctypeLabel||''}${d.issueDate?' · '+d.issueDate:''}</div></div>
+    </div>
+    <div style="height:4px;background:#f97316"></div>
+    <div style="padding:18px 24px;background:#fff">
+      <div style="display:flex;background:#f8fafc;border-radius:8px;margin-bottom:14px;overflow:hidden">
+        <div style="flex:1;padding:9px 12px;border-right:1px solid #e2e8f0;text-align:center"><div style="font-size:8px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:2px">PORT OF LOADING</div><div style="font-size:13px;font-weight:700;color:#1a3a5c">${d.pol||'—'}</div></div>
+        <div style="align-self:center;color:#2563eb;font-size:18px;padding:0 8px">→</div>
+        <div style="flex:1;padding:9px 12px;border-right:1px solid #e2e8f0;text-align:center"><div style="font-size:8px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:2px">PORT OF DISCHARGE</div><div style="font-size:13px;font-weight:700;color:#1a3a5c">${d.pod||'—'}</div></div>
+        <div style="flex:1;padding:9px 12px;text-align:center"><div style="font-size:8px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:2px">CONTAINER</div><div style="font-size:11px;font-weight:600;color:#1a3a5c">${containersHTML(d.containers)}</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div><div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">SHIPPER</div><div style="font-size:11px;font-weight:600;color:#1a3a5c;white-space:pre-wrap">${partyStr(d.shipper)}</div></div>
+        <div><div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">CONSIGNEE</div><div style="font-size:11px;font-weight:600;color:#1a3a5c;white-space:pre-wrap">${partyStr(d.consignee)}</div></div>
+        <div><div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">NOTIFY PARTY</div><div style="font-size:11px">${d.notify.name||'—'}</div></div>
+        <div><div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:3px">VESSEL / VOYAGE</div><div style="font-size:11px">${d.vessel||'—'}</div></div>
+      </div>
+      ${imoBlock(d.imo)}${ffBlock(d.ff)}
+      <table style="width:100%;border-collapse:collapse;margin-bottom:12px">${TABLE_HEAD}<tbody>${goodsRows(d.goods)}</tbody></table>
+      ${d.remarks?`<div style="background:#fff7ed;border-right:3px solid #f97316;padding:7px 10px;margin-bottom:12px;font-size:11px"><b>Remarks: </b>${d.remarks}</div>`:''}
+      <div style="background:#f8fafc;border-top:3px solid #f97316;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin:0 -24px -18px">
+        <div style="font-size:10px;color:#64748b"><div>Issue: ${d.issueDate||'—'} — ${d.issuePlace||''}</div><div>Signatory: ${d.signatory||'—'}</div></div>
+        <div>${stampHTML(d.stamp)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Template 3: Minimal ──
+function buildT3(d) {
+  const docTitles = d._titles || {};
+  const title = docTitles[d.docType] || 'BILL OF LADING';
+  const shortType = {bl:'Lading',co:'Origin',pl:'Packing List',inv:'Invoice',bl_original:'Lading',bl_seaway:'Waybill',bl_house:'Lading (H)',bl_master:'Lading (M)',co_eg:'Origin',co_arab:'Origin',co_eur:'Certificate',phyto:'Certificate',halal:'Certificate',health:'Certificate',invoice:'Invoice',proforma:'Invoice',draft_bl:'Lading (Draft)',awb:'Waybill',multimodal:'Transport Doc'};
+  return `<div style="font-family:Arial,sans-serif;font-size:12px;color:#111;max-width:820px;margin:0 auto;padding:28px 32px;border:1px solid #e2e8f0">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid #ddd">
+      <div>${logoHTML(d.logo)}</div>
+      <div style="text-align:right"><div style="font-size:26px;font-weight:300;color:#111;letter-spacing:-1px">Bill of <span style="font-weight:900;color:#1a3a5c">${shortType[d.docType]||'Lading'}</span></div><div style="font-size:10px;color:#aaa;margin-top:3px">${d._doctypeLabel||''}${d.issueDate?' · '+d.issueDate:''}</div></div>
+    </div>
+    <div style="display:flex;background:#f8f9fb;border-radius:8px;margin-bottom:16px;overflow:hidden">
+      <div style="flex:1;padding:9px 14px;border-right:1px solid #eee"><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#aaa;text-transform:uppercase">Port of Loading</div><div style="font-size:12px;font-weight:600;color:#1a3a5c">${d.pol||'—'}</div></div>
+      <div style="flex:1;padding:9px 14px;border-right:1px solid #eee"><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#aaa;text-transform:uppercase">Port of Discharge</div><div style="font-size:12px;font-weight:600;color:#1a3a5c">${d.pod||'—'}</div></div>
+      <div style="flex:1;padding:9px 14px"><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#aaa;text-transform:uppercase">Container</div><div style="font-size:12px;font-weight:600;color:#1a3a5c">${containersHTML(d.containers)}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 28px;margin-bottom:16px">
+      <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:3px">SHIPPER</div><div style="font-size:11px;font-weight:700;color:#1a3a5c;white-space:pre-wrap;margin-bottom:12px">${partyStr(d.shipper)}</div></div>
+      <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:3px">CONSIGNEE</div><div style="font-size:11px;font-weight:700;color:#1a3a5c;white-space:pre-wrap;margin-bottom:12px">${partyStr(d.consignee)}</div></div>
+      <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:3px">NOTIFY PARTY</div><div style="font-size:11px;margin-bottom:12px">${d.notify.name||'—'}</div></div>
+      <div><div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:3px">VESSEL / VOYAGE</div><div style="font-size:11px;margin-bottom:12px">${d.vessel||'—'}</div></div>
+    </div>
+    ${imoBlock(d.imo)}${ffBlock(d.ff)}
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+      <thead><tr><th style="border-bottom:2px solid #1a3a5c;padding:6px 7px;font-size:10px;font-weight:700;color:#1a3a5c;text-align:left">Description</th><th style="border-bottom:2px solid #1a3a5c;padding:6px 7px;font-size:10px;color:#1a3a5c;text-align:center">Packages</th><th style="border-bottom:2px solid #1a3a5c;padding:6px 7px;font-size:10px;color:#1a3a5c">Weight</th><th style="border-bottom:2px solid #1a3a5c;padding:6px 7px;font-size:10px;color:#1a3a5c;text-align:center">CBM</th></tr></thead>
+      <tbody>${goodsRows(d.goods)}</tbody>
+    </table>
+    ${d.remarks?`<div style="font-size:11px;color:#666;margin-bottom:14px;padding:6px 10px;border-right:3px solid #1a3a5c"><b>Remarks: </b>${d.remarks}</div>`:''}
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;padding-top:12px;border-top:1px solid #ddd">
+      <div style="font-size:10px;color:#bbb"><div>${d.issueDate||'—'} — ${d.issuePlace||''}</div><div>${d.signatory||'—'}</div></div>
+      <div>${stampHTML(d.stamp)}</div>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════
+// GENERATE
+// ════════════════════════════════════════════════
+function generateDoc() {
+  try {
+    const d = collectData();
+    // Build docTitles from map (defined later in script, use inline fallback)
+    const titles = {
+      bl_original:'BILL OF LADING', bl_seaway:'SEA WAYBILL', bl_through:'THROUGH BILL OF LADING',
+      bl_switch:'SWITCH BILL OF LADING', bl_house:'HOUSE BILL OF LADING', bl_master:'MASTER BILL OF LADING',
+      bl_charter:'CHARTER PARTY B/L', awb:'AIR WAYBILL', multimodal:'MULTIMODAL TRANSPORT DOCUMENT',
+      co_eg:'CERTIFICATE OF ORIGIN', co_arab:'CERTIFICATE OF ORIGIN (ARAB LEAGUE)',
+      co_eur:'EUR.1 MOVEMENT CERTIFICATE', phyto:'PHYTOSANITARY CERTIFICATE',
+      halal:'HALAL CERTIFICATE', health:'HEALTH CERTIFICATE',
+      invoice:'COMMERCIAL INVOICE', pl:'PACKING LIST', proforma:'PROFORMA INVOICE',
+      draft_bl:'DRAFT BILL OF LADING', bl:'BILL OF LADING', co:'CERTIFICATE OF ORIGIN', inv:'COMMERCIAL INVOICE',
+    };
+    // Inject into d so builders can use it
+    d._titles = titles;
+    const _sel = document.getElementById('docType');
+    d._doctypeLabel = (_sel && _sel.selectedOptions[0])
+      ? _sel.selectedOptions[0].textContent.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').trim()
+      : '';
+    let html = '';
+    if (d.tpl === 't1') html = buildT1(d);
+    else if (d.tpl === 't2') html = buildT2(d);
+    else html = buildT3(d);
+    document.getElementById('print-area').innerHTML = html;
+    const out = document.getElementById('output-section');
+    out.classList.remove('hidden');
+    out.scrollIntoView({ behavior:'smooth', block:'start' });
+  } catch(e) {
+    console.error('generateDoc error:', e);
+    alert('Error generating document: ' + e.message);
+  }
+}
+
+function sendByEmail() {
+  const sub = encodeURIComponent('Shipping Document');
+  const body = encodeURIComponent(
+    'Shipper: ' + (document.getElementById('shipperName')||{}).value + '\n' +
+    'POL: ' + (document.getElementById('pol')||{}).value + '\n' +
+    'POD: ' + (document.getElementById('pod')||{}).value
+  );
+  window.open('mailto:Khaled23hani@gmail.com?subject=' + sub + '&body=' + body);
+}
+
+// ════════════════════════════════════════════════
+// LANGUAGE
+// ════════════════════════════════════════════════
+const L = {
+  ar:{ destCountryLbl:'بلد الوصول', destPortLbl:'ميناء الوصول (يملأ تلقائياً أو اكتبه)', badge:'📄 نظام وثائق الشحن الاحترافي', mainTitle:'محرر وثائق الشحن', mainSub:'عبّئ البيانات — اختر القالب — حمّل PDF', tplTitle:'نوع المستند والقالب', docType:'نوع المستند', logo:'شعار الشركة (اختياري)', logoClick:'اضغط للرفع', chooseTpl:'اختر القالب', partiesTitle:'الأطراف', shipperHd:'📤 المرسل / المصدر', consigneeHd:'📥 المستلم / المستورد', notifyHd:'🔔 جهة الإشعار', routeTitle:'مسار الشحن والسفينة', pol:'ميناء التحميل (POL)', pod:'ميناء التفريغ (POD)', contType:'نوع الحاوية', goodsTitle:'البضاعة + HS Code', addRow:'إضافة صف', imoSub:'فعّل للبضائع الخطرة', ffToggle:'بيانات وكيل الشحن', ffSub:'اختياري', signatory:'الجهة المصدرة', remarks:'ملاحظات وتعليمات خاصة', generateBtn:'إنشاء الوثيقة', docReady:'الوثيقة جاهزة!', printBtn:'طباعة / PDF', sendBtn:'إرسال بالبريد' },
+  en:{ destCountryLbl:'Destination Country', destPortLbl:'Destination Port (auto-filled or edit)', badge:'📄 Professional Shipping Documentation', mainTitle:'Shipping Doc Generator', mainSub:'Fill in details — choose template — download PDF', tplTitle:'Template Design & Document Type', docType:'Document Type', logo:'Company Logo (Optional)', logoClick:'Click to upload', chooseTpl:'Choose Template', partiesTitle:'Parties', shipperHd:'📤 Shipper / Exporter', consigneeHd:'📥 Consignee / Importer', notifyHd:'🔔 Notify Party', routeTitle:'Route & Vessel', pol:'Port of Loading (POL)', pod:'Port of Discharge (POD)', contType:'Container Type', goodsTitle:'Goods + HS Code', addRow:'Add Row', imoSub:'Enable if shipment contains hazardous materials', ffToggle:'Freight Forwarder Details', ffSub:'Optional', signatory:'Signatory / Issuing Party', remarks:'Special Instructions / Remarks', generateBtn:'Generate Document — Preview & Download', docReady:'Document Ready!', printBtn:'Print / Save PDF', sendBtn:'Send by Email' },
+  ru:{ destCountryLbl:'Страна назначения', destPortLbl:'Порт назначения (авто)', badge:'📄 Система морских документов', mainTitle:'Генератор документов', mainSub:'Заполните данные и создайте документ', tplTitle:'Тип документа и шаблон', docType:'Тип документа', logo:'Логотип', logoClick:'Нажмите для загрузки', chooseTpl:'Выберите шаблон', partiesTitle:'Стороны', shipperHd:'📤 Отправитель', consigneeHd:'📥 Получатель', notifyHd:'🔔 Уведомляемая сторона', routeTitle:'Маршрут и судно', pol:'Порт погрузки', pod:'Порт выгрузки', contType:'Тип контейнера', goodsTitle:'Товары + Код ТН ВЭД', addRow:'Добавить строку', imoSub:'Опасные грузы', ffToggle:'Данные экспедитора', ffSub:'Необязательно', signatory:'Подписант', remarks:'Особые инструкции', generateBtn:'Создать документ', docReady:'Документ готов!', printBtn:'Печать / PDF', sendBtn:'Отправить' },
+  fr:{ destCountryLbl:'Pays de destination', destPortLbl:'Port de destination (auto)', badge:'📄 Documentation Maritime Professionnelle', mainTitle:'Générateur de Documents', mainSub:'Remplissez les données et générez', tplTitle:'Type de document et modèle', docType:'Type de document', logo:'Logo (optionnel)', logoClick:'Cliquez pour télécharger', chooseTpl:'Choisir un modèle', partiesTitle:'Parties', shipperHd:'📤 Expéditeur', consigneeHd:'📥 Consignataire', notifyHd:'🔔 Partie à notifier', routeTitle:'Route et navire', pol:'Port de chargement', pod:'Port de déchargement', contType:'Type de conteneur', goodsTitle:'Marchandises + Code SH', addRow:'Ajouter ligne', imoSub:'Marchandises dangereuses', ffToggle:'Transitaire', ffSub:'Optionnel', signatory:'Signataire', remarks:'Instructions spéciales', generateBtn:'Générer le document', docReady:'Document prêt!', printBtn:'Imprimer / PDF', sendBtn:'Envoyer' },
+  de:{ destCountryLbl:'Bestimmungsland', destPortLbl:'Bestimmungshafen (auto)', badge:'📄 Versanddokumentationssystem', mainTitle:'Dokument-Generator', mainSub:'Daten ausfüllen und Dokument erstellen', tplTitle:'Dokumententyp und Vorlage', docType:'Dokumententyp', logo:'Logo (optional)', logoClick:'Klicken zum Hochladen', chooseTpl:'Vorlage wählen', partiesTitle:'Parteien', shipperHd:'📤 Versender', consigneeHd:'📥 Empfänger', notifyHd:'🔔 Meldeadresse', routeTitle:'Route und Schiff', pol:'Verladehafen', pod:'Entladehafen', contType:'Containertyp', goodsTitle:'Waren + HS Code', addRow:'Zeile hinzufügen', imoSub:'Gefahrgut', ffToggle:'Spediteurdaten', ffSub:'Optional', signatory:'Unterzeichner', remarks:'Besondere Anweisungen', generateBtn:'Dokument erstellen', docReady:'Dokument bereit!', printBtn:'Drucken / PDF', sendBtn:'Senden' },
+  tr:{ destCountryLbl:'Varış Ülkesi', destPortLbl:'Varış Limanı (otomatik)', badge:'📄 Profesyonel Denizcilik Belgelendirme Sistemi', mainTitle:'Sevkiyat Belgesi Oluşturucu', mainSub:'Bilgileri doldurun — şablon seçin — PDF indirin', tplTitle:'Şablon ve Belge Türü', docType:'Belge Türü', logo:'Şirket Logosu (İsteğe Bağlı)', logoClick:'Yüklemek için tıklayın', chooseTpl:'Şablon Seçin', partiesTitle:'Taraflar', shipperHd:'📤 Gönderici / İhracatçı', consigneeHd:'📥 Alıcı / İthalatçı', notifyHd:'🔔 Bildirim Tarafı', routeTitle:'Rota, Gemi ve Varış Ülkesi', pol:'Yükleme Limanı (POL)', pod:'Boşaltma Limanı (POD)', contType:'Konteyner Türü', destCountryLbl:'Varış Ülkesi', destPortLbl:'Varış Limanı', goodsTitle:'Mallar + HS Kodu', addRow:'Satır Ekle', imoSub:'Tehlikeli madde içeriyorsa etkinleştirin', ffToggle:'Nakliye Acentesi Bilgileri', ffSub:'İsteğe bağlı', signatory:'İmzalayan / Düzenleyen', remarks:'Özel Talimatlar', generateBtn:'Belge Oluştur — Önizle ve İndir', docReady:'Belge Hazır!', printBtn:'Yazdır / PDF', sendBtn:"E-posta ile Gönder" },
+  es:{ destCountryLbl:'País de destino', destPortLbl:'Puerto de destino (auto)', badge:'📄 Sistema de Documentación Marítima', mainTitle:'Generador de Documentos', mainSub:'Complete los datos y genere el documento', tplTitle:'Tipo de documento y plantilla', docType:'Tipo de documento', logo:'Logo (opcional)', logoClick:'Haga clic para subir', chooseTpl:'Elegir plantilla', partiesTitle:'Partes', shipperHd:'📤 Embarcador', consigneeHd:'📥 Consignatario', notifyHd:'🔔 Parte notificada', routeTitle:'Ruta y buque', pol:'Puerto de carga', pod:'Puerto de descarga', contType:'Tipo de contenedor', goodsTitle:'Mercancías + Código SA', addRow:'Añadir fila', imoSub:'Mercancías peligrosas', ffToggle:'Datos del transitario', ffSub:'Opcional', signatory:'Firmante', remarks:'Instrucciones especiales', generateBtn:'Generar documento', docReady:'¡Documento listo!', printBtn:'Imprimir / PDF', sendBtn:'Enviar' },
+};
+
+function changeLang(lang) {
+  currentLang = lang;
+  const t = L[lang] || L['en'];
+  const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  set('lbl-badge', t.badge);
+  set('lbl-main-title', t.mainTitle);
+  set('lbl-main-sub', t.mainSub);
+  set('lbl-tpl-title', t.tplTitle);
+  set('lbl-doc-type', t.docType);
+  set('lbl-logo', t.logo);
+  set('lbl-logo-click', t.logoClick);
+  set('lbl-choose-tpl', t.chooseTpl);
+  set('lbl-parties-title', t.partiesTitle);
+  set('lbl-shipper-hd', t.shipperHd);
+  set('lbl-consignee-hd', t.consigneeHd);
+  set('lbl-notify-hd', t.notifyHd);
+  set('lbl-route-title', t.routeTitle);
+  set('lbl-pol', t.pol);
+  set('lbl-pod', t.pod);
+  set('lbl-cont-type', t.contType);
+  set('lbl-ff-toggle', t.ffToggle);
+  set('lbl-ff-sub', t.ffSub);
+  set('lbl-imo-sub', t.imoSub);
+  set('lbl-goods-title', t.goodsTitle);
+  set('lbl-add-row', t.addRow);
+  set('lbl-signatory', t.signatory);
+  set('lbl-remarks', t.remarks);
+  if (t.destCountryLbl) set('lbl-dest-country-lbl', t.destCountryLbl);
+  if (t.destPortLbl) set('lbl-dest-port-lbl', t.destPortLbl);
+  set('lbl-generate-btn', t.generateBtn);
+  set('lbl-doc-ready', t.docReady);
+  set('lbl-print-btn', t.printBtn);
+  set('lbl-send-btn', t.sendBtn);
+  // RTL
+  document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+  document.documentElement.setAttribute('lang', lang);
+}
+
+
+// ════════════════════════════════════════════════════════════════
+// FEATURE 1: Download Excel/CSV with embedded VBA-ready macro hint
+// الملف منظم بشكل ثابت لاستيراده في أي ERP بضغطة زر
+// ════════════════════════════════════════════════════════════════
+var DOC_TITLES_XL = {
+  bl_original:'BILL OF LADING', bl_seaway:'SEA WAYBILL', bl_through:'THROUGH B/L',
+  bl_switch:'SWITCH B/L', bl_house:'HOUSE B/L', bl_master:'MASTER B/L',
+  bl_charter:'CHARTER PARTY B/L', awb:'AIR WAYBILL', multimodal:'MULTIMODAL',
+  co_eg:'CERTIFICATE OF ORIGIN (EG)', co_arab:'CERTIFICATE OF ORIGIN (ARAB)',
+  co_eur:'EUR.1 CERTIFICATE', phyto:'PHYTOSANITARY CERT', halal:'HALAL CERT',
+  health:'HEALTH CERT', invoice:'COMMERCIAL INVOICE', pl:'PACKING LIST',
+  proforma:'PROFORMA INVOICE', draft_bl:'DRAFT B/L', bl:'BILL OF LADING',
+};
+
+function escCSV(val) {
+  var s = String(val == null ? '' : val).replace(/"/g, '""');
+  if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1 || s.indexOf('\r') !== -1) {
+    return '"' + s + '"';
+  }
+  return s;
+}
+
+function downloadExcel() {
+  var d = collectData();
+  var g = (d.goods && d.goods.length > 0) ? d.goods : [{}];
+
+  var headers = [
+    'DOCUMENT_TYPE','REFERENCE_NO','ISSUE_DATE','ISSUE_PLACE',
+    'SHIPPER_NAME','SHIPPER_TAX_ID','SHIPPER_PHONE',
+    'CONSIGNEE_NAME','CONSIGNEE_TAX_ID','CONSIGNEE_PHONE',
+    'NOTIFY_PARTY','NOTIFY_PHONE',
+    'PORT_OF_LOADING','PORT_OF_DISCHARGE',
+    'VESSEL_VOYAGE','CONTAINER_TYPE','CONTAINER_NO',
+    'DESTINATION_COUNTRY','DESTINATION_PORT',
+    'FF_NAME','FF_TERMS','FF_INCOTERMS',
+    'IMO_CLASS','IMO_NAME','IMO_PACKING_GROUP','IMO_FLASH_POINT',
+    'SIGNATORY','REMARKS',
+    'GOODS_DESC','HS_CODE','PACKAGES','WEIGHT','CBM'
+  ];
+
+  var rows = g.map(function(item) {
+    return [
+      DOC_TITLES_XL[d.docType] || d.docType,
+      d.blRef, d.issueDate, d.issuePlace,
+      d.shipper ? d.shipper.name : '',
+      d.shipper ? d.shipper.tax  : '',
+      d.shipper ? d.shipper.phone: '',
+      d.consignee ? d.consignee.name : '',
+      d.consignee ? d.consignee.tax  : '',
+      d.consignee ? d.consignee.phone: '',
+      d.notify ? d.notify.name  : '',
+      d.notify ? d.notify.phone : '',
+      d.pol, d.pod, d.vessel,
+      (d.containers||[]).map(function(c){ return c.type; }).join(' ; '),
+      (d.containers||[]).map(function(c){ return c.no; }).join(' ; '),
+      d.destCountry, d.destPort,
+      d.ff ? d.ff.name  : '',
+      d.ff ? d.ff.terms : '',
+      d.ff ? d.ff.inco  : '',
+      d.imo ? d.imo.cls   : '',
+      d.imo ? d.imo.name  : '',
+      d.imo ? d.imo.pg    : '',
+      d.imo ? d.imo.flash : '',
+      d.signatory, d.remarks,
+      item.desc || '', item.hs || '',
+      item.pkgs || '', item.wt  || '', item.cbm || ''
+    ];
+  });
+
+  // BOM (\uFEFF) for Arabic text display in Excel
+  var csv = '\uFEFF';
+  csv += headers.map(escCSV).join(',') + '\r\n';
+  rows.forEach(function(row) {
+    csv += row.map(escCSV).join(',') + '\r\n';
+  });
+
+  // Instruction sheet hint — يرشد موظف IT الشركة لعمل macro بسيط
+  csv += '\r\n';
+  csv += '=== IMPORT INSTRUCTIONS (for IT department) ===\r\n';
+  csv += 'This file uses fixed column headers — safe to import via:\r\n';
+  csv += '1. Excel Power Query: Data > Get Data > From CSV\r\n';
+  csv += '2. SAP: File > Import > CSV with field mapping\r\n';
+  csv += '3. VBA Macro: map REFERENCE_NO > BL_NUMBER column etc.\r\n';
+  csv += 'Generated by Shipping Doc Generator — ' + new Date().toISOString() + '\r\n';
+
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'Shipment_' + (d.blRef || 'Export') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ════════════════════════════════════════════════════════════════
+// FEATURE 2: QR Code — compact JSON scannable by any mobile/scanner
+// ════════════════════════════════════════════════════════════════
+var qrInstance = null;
+
+function showQRCode() {
+  var d = collectData();
+  var modal     = document.getElementById('qr-modal');
+  var container = document.getElementById('qr-container');
+  var refText   = document.getElementById('qr-ref-text');
+
+  // Only essential fields — keep QR size reasonable
+  var qrData = {};
+  if (d.blRef)       qrData.ref  = d.blRef;
+  if (d.docType)     qrData.type = DOC_TITLES_XL[d.docType] || d.docType;
+  if (d.issueDate)   qrData.date = d.issueDate;
+  if (d.pol)         qrData.pol  = d.pol;
+  if (d.pod)         qrData.pod  = d.pod;
+  if (d.shipper && d.shipper.name)   qrData.ship = d.shipper.name.substring(0, 35);
+  if (d.consignee && d.consignee.name) qrData.cons = d.consignee.name.substring(0, 35);
+  if (d.vessel)      qrData.vsl  = d.vessel;
+  if (d.containers && d.containers[0]) qrData.cont = [d.containers[0].type, d.containers[0].no].filter(Boolean).join(' | ');
+  if (d.goods && d.goods[0]) {
+    if (d.goods[0].hs)  qrData.hs = d.goods[0].hs;
+    if (d.goods[0].wt)  qrData.wt = d.goods[0].wt;
+    if (d.goods[0].cbm) qrData.cbm = d.goods[0].cbm;
+  }
+
+  var qrText = JSON.stringify(qrData);
+
+  container.innerHTML = '';
+  if (qrInstance) { try { qrInstance.clear(); } catch(e) {} qrInstance = null; }
+
+  try {
+    qrInstance = new QRCode(container, {
+      text: qrText,
+      width: 220, height: 220,
+      colorDark: '#0f172a', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+    if (refText) {
+      refText.textContent = (d.blRef || '—') + '  |  ' + (d.pol || '—') + ' → ' + (d.pod || '—');
+    }
+    modal.classList.remove('hidden');
+  } catch(e) {
+    alert('QR Error: ' + e.message + '. Make sure you filled in shipment data first.');
+  }
+}
+
+function downloadQRImage() {
+  var container = document.getElementById('qr-container');
+  var d = collectData();
+  var filename = 'QR_' + (d.blRef || 'shipment') + '.png';
+  var canvas = container.querySelector('canvas');
+  var img    = container.querySelector('img');
+  var a = document.createElement('a');
+  a.download = filename;
+  if (canvas) {
+    a.href = canvas.toDataURL('image/png');
+  } else if (img) {
+    a.href = img.src;
+  } else { return; }
+  a.click();
+}
+
+// ════════════════════════════════════════════════════════════════
+// FEATURE 3: Structured Email — KEY: VALUE format, easy for IT to parse
+// Works even if target system has multiple pages/modules
+// ════════════════════════════════════════════════════════════════
+function sendStructuredEmail() {
+  var d = collectData();
+  var g = (d.goods && d.goods.length > 0) ? d.goods : [{}];
+
+  var goodsLines = g.map(function(item, i) {
+    var n = i + 1;
+    var lines = [];
+    if (item.desc) lines.push('GOODS_' + n + '_DESC: '     + item.desc);
+    if (item.hs)   lines.push('GOODS_' + n + '_HS_CODE: '  + item.hs);
+    if (item.pkgs) lines.push('GOODS_' + n + '_PACKAGES: ' + item.pkgs);
+    if (item.wt)   lines.push('GOODS_' + n + '_WEIGHT: '   + item.wt);
+    if (item.cbm)  lines.push('GOODS_' + n + '_CBM: '      + item.cbm);
+    return lines.join('\n');
+  }).join('\n');
+
+  var ffLines = d.ff ? [
+    'FF_NAME: '      + (d.ff.name  || ''),
+    'FF_TERMS: '     + (d.ff.terms || ''),
+    'FF_INCOTERMS: ' + (d.ff.inco  || ''),
+  ].join('\n') : '';
+
+  var imoLines = d.imo ? [
+    'IMO_CLASS: '         + (d.imo.cls   || ''),
+    'IMO_PROPER_NAME: '   + (d.imo.name  || ''),
+    'IMO_PACKING_GROUP: ' + (d.imo.pg    || ''),
+    'IMO_FLASH_POINT: '   + (d.imo.flash || ''),
+  ].join('\n') : '';
+
+  var lines = [
+    '╔══════════════════════════════════════════╗',
+    '  STRUCTURED SHIPMENT DATA',
+    '  Parse-ready format — KEY: VALUE per line',
+    '╚══════════════════════════════════════════╝',
+    '',
+    'DOCUMENT_TYPE: '     + (DOC_TITLES_XL[d.docType] || d.docType),
+    'REFERENCE_NO: '      + d.blRef,
+    'ISSUE_DATE: '        + d.issueDate,
+    'ISSUE_PLACE: '       + d.issuePlace,
+    '',
+    'SHIPPER_NAME: '      + (d.shipper ? d.shipper.name  : ''),
+    'SHIPPER_TAX_ID: '    + (d.shipper ? d.shipper.tax   : ''),
+    'SHIPPER_PHONE: '     + (d.shipper ? d.shipper.phone : ''),
+    '',
+    'CONSIGNEE_NAME: '    + (d.consignee ? d.consignee.name  : ''),
+    'CONSIGNEE_TAX_ID: '  + (d.consignee ? d.consignee.tax   : ''),
+    'CONSIGNEE_PHONE: '   + (d.consignee ? d.consignee.phone : ''),
+    '',
+    'NOTIFY_PARTY: '      + (d.notify ? d.notify.name  : ''),
+    'NOTIFY_PHONE: '      + (d.notify ? d.notify.phone : ''),
+    '',
+    'PORT_OF_LOADING: '   + d.pol,
+    'PORT_OF_DISCHARGE: ' + d.pod,
+    'VESSEL_VOYAGE: '     + d.vessel,
+    'CONTAINER_TYPE: '    + (d.containers||[]).map(function(c){ return c.type; }).join(' ; '),
+    'CONTAINER_NO: '      + (d.containers||[]).map(function(c){ return c.no; }).join(' ; '),
+    'DEST_COUNTRY: '      + d.destCountry,
+    'DEST_PORT: '         + d.destPort,
+    '',
+    goodsLines,
+  ];
+  if (ffLines)  { lines.push(''); lines.push(ffLines); }
+  if (imoLines) { lines.push(''); lines.push(imoLines); }
+  lines.push('');
+  lines.push('SIGNATORY: ' + d.signatory);
+  lines.push('REMARKS: '   + d.remarks);
+  lines.push('');
+  lines.push('Generated: ' + new Date().toISOString());
+  lines.push('Source: Shipping Doc Generator');
+  lines.push('');
+  lines.push('--- IT PARSING NOTE ---');
+  lines.push('Each line: KEY: VALUE');
+  lines.push('Multi-page system: map each KEY to the right module field.');
+  lines.push('Script example (Python): dict(line.split(": ",1) for line in body.split("\n") if ": " in line)');
+
+  var subject = encodeURIComponent(
+    '[SHIPMENT] ' + (DOC_TITLES_XL[d.docType] || 'SHIPMENT') +
+    ' | Ref: ' + (d.blRef || 'NEW') +
+    ' | ' + (d.pol || '—') + ' → ' + (d.pod || '—') +
+    ' | ' + (d.issueDate || '')
+  );
+
+  var bodyEnc = encodeURIComponent(lines.join('\n'));
+  window.location.href = 'mailto:?subject=' + subject + '&body=' + bodyEnc;
+}
+
+// ── INIT ──
+
+// ── Speakable: hover to speak ──
+function initSpeakable() {
+  if (!window.speechSynthesis) return;
+  document.querySelectorAll('.speakable').forEach(function(el) {
+    el.addEventListener('mouseenter', function() {
+      window.speechSynthesis.cancel();
+      var text = (el.innerText || el.textContent || '').trim();
+      if (!text) return;
+      var utt = new SpeechSynthesisUtterance(text);
+      var langMap = { ar:'ar-EG', en:'en-GB', ru:'ru-RU', fr:'fr-FR', de:'de-DE', es:'es-ES', tr:'tr-TR' };
+      utt.lang = langMap[currentLang] || 'en-GB';
+      window.speechSynthesis.speak(utt);
+    });
+    el.addEventListener('mouseleave', function() { window.speechSynthesis.cancel(); });
+  });
+}
+
+// ── Document Type Info ──
+const docTypeInfoDB = {
+  bl_original: { title:'ORIGINAL BILL OF LADING',    desc:'3 originals issued. Negotiable — required for bank L/C. Most common for international trade.' },
+  bl_seaway:   { title:'SEA WAYBILL',                desc:'Non-negotiable. No original needed at destination. Faster release for trusted consignees.' },
+  bl_through:  { title:'THROUGH BILL OF LADING',     desc:'Covers full journey including transshipments. One document for multi-leg routes.' },
+  bl_switch:   { title:'SWITCH BILL OF LADING',      desc:'Replaces original B/L — conceals origin/shipper. Requires agent cooperation.' },
+  bl_house:    { title:'HOUSE BILL OF LADING (HBL)', desc:'Issued by freight forwarder. Used in LCL / groupage shipments.' },
+  bl_master:   { title:'MASTER BILL OF LADING (MBL)',desc:'Issued by shipping line to freight forwarder. Covers full container between agents.' },
+  bl_charter:  { title:'CHARTER PARTY B/L',          desc:'Issued under a charter party agreement. For bulk cargo / full vessel charters.' },
+  awb:         { title:'AIR WAYBILL (AWB)',           desc:'Non-negotiable air transport document. Issued by airline or IATA agent. Fast clearance.' },
+  multimodal:  { title:'MULTIMODAL TRANSPORT DOC',   desc:'Road + Sea or Rail + Sea. One document for full door-to-door shipments.' },
+  co_eg:       { title:'CERTIFICATE OF ORIGIN (EG)', desc:'Issued by Egyptian Chamber of Commerce. Required for preferential duty rates.' },
+  co_arab:     { title:'CERTIFICATE OF ORIGIN (ARAB)',desc:'For Arab League countries — preferential tariff treatment.' },
+  co_eur:      { title:'EUR.1 MOVEMENT CERTIFICATE', desc:'For EU preferential trade — zero/reduced duties under EU free trade agreements.' },
+  phyto:       { title:'PHYTOSANITARY CERTIFICATE',  desc:'Required for fresh fruits & vegetables. Issued by Egyptian Ministry of Agriculture.' },
+  halal:       { title:'HALAL CERTIFICATE',           desc:'Required for food exports to Muslim-majority countries.' },
+  health:      { title:'HEALTH CERTIFICATE',          desc:'For food, animal products, seafood — Ministry of Health.' },
+  invoice:     { title:'COMMERCIAL INVOICE',          desc:'Main commercial document. Shows value, quantity, terms. Required for all customs.' },
+  pl:          { title:'PACKING LIST',                desc:'Details each package: marks, quantities, weights, CBM.' },
+  proforma:    { title:'PROFORMA INVOICE',            desc:'Preliminary invoice — used for L/C applications and import licenses.' },
+  draft_bl:    { title:'DRAFT BILL OF LADING',        desc:'Sent for review before final issuance — allows corrections before printing.' },
+};
+
+const docTitlesMap = {
+  bl_original:'BILL OF LADING', bl_seaway:'SEA WAYBILL', bl_through:'THROUGH BILL OF LADING',
+  bl_switch:'SWITCH BILL OF LADING', bl_house:'HOUSE BILL OF LADING', bl_master:'MASTER BILL OF LADING',
+  bl_charter:'CHARTER PARTY B/L', awb:'AIR WAYBILL', multimodal:'MULTIMODAL TRANSPORT DOCUMENT',
+  co_eg:'CERTIFICATE OF ORIGIN', co_arab:'CERTIFICATE OF ORIGIN (ARAB LEAGUE)',
+  co_eur:'EUR.1 MOVEMENT CERTIFICATE', phyto:'PHYTOSANITARY CERTIFICATE',
+  halal:'HALAL CERTIFICATE', health:'HEALTH CERTIFICATE',
+  invoice:'COMMERCIAL INVOICE', pl:'PACKING LIST', proforma:'PROFORMA INVOICE', draft_bl:'DRAFT BILL OF LADING',
+  bl:'BILL OF LADING', co:'CERTIFICATE OF ORIGIN', inv:'COMMERCIAL INVOICE',
+};
+
+function onDocTypeChange(val) {
+  const info = docTypeInfoDB[val];
+  const box  = document.getElementById('doctype-info');
+  const txt  = document.getElementById('doctype-info-text');
+  if (info && box && txt) {
+    txt.innerHTML = '<strong style="color:#06b6d4;display:block;margin-bottom:3px">' + info.title + '</strong>' + info.desc;
+    box.classList.remove('hidden');
+  } else if (box) { box.classList.add('hidden'); }
+}
+
+
+// ── POL Selector ──
+function onPOLChange(val) {
+  const manualInput = document.getElementById('pol');
+  const selectedDiv = document.getElementById('pol-selected');
+  const selectedText = document.getElementById('pol-selected-text');
+  if (val === 'custom') {
+    if (manualInput) { manualInput.style.display = 'block'; manualInput.focus(); }
+    if (selectedDiv) selectedDiv.classList.add('hidden');
+  } else if (val) {
+    if (manualInput) { manualInput.style.display = 'none'; manualInput.value = val; }
+    if (selectedDiv) { selectedDiv.classList.remove('hidden'); }
+    if (selectedText) selectedText.textContent = val;
+  } else {
+    if (manualInput) { manualInput.style.display = 'none'; manualInput.value = ''; }
+    if (selectedDiv) selectedDiv.classList.add('hidden');
+  }
+}
+
+// ── Destination Country → Auto-fill Port ──
+function onDestCountryChange(val) {
+  if (!val) return;
+  const parts = val.split('|'); // code|name|ports
+  if (parts.length < 3) return;
+  const countryName = parts[1];
+  const ports = parts[2];
+  // Auto-fill POD field
+  const podEl = document.getElementById('pod');
+  if (podEl && !podEl.value) podEl.value = ports.split(',')[0].trim();
+  // Set destPort
+  const destPortEl = document.getElementById('destPort');
+  if (destPortEl) destPortEl.value = ports;
+  // Show hint
+  const hint = document.getElementById('destPort-hint');
+  const hintTxt = document.getElementById('destPort-hint-text');
+  if (hint && hintTxt) {
+    hintTxt.textContent = 'Main ports: ' + ports;
+    hint.classList.remove('hidden');
+    hint.style.display = 'flex';
+  }
+}
+
+// ── Update speakable labels list ──
+const speakableIds = [
+  'lbl-badge','lbl-main-title','lbl-tpl-title',
+  'lbl-parties-title','lbl-shipper-hd','lbl-consignee-hd','lbl-notify-hd',
+  'lbl-route-title','lbl-goods-title','lbl-generate-btn','lbl-doc-ready',
+  'lbl-print-btn','lbl-send-btn','lbl-dest-section','lbl-dest-country-lbl','lbl-dest-port-lbl',
+];
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Set today's date
+  document.getElementById('issueDate').value = new Date().toISOString().split('T')[0];
+  // Add first goods row + first container row
+  addGoodsRow();
+  addContainerRow();
+  // Apply pre-selected template from URL
+  selectTpl(activeTpl);
+  // Default language
+  changeLang('en');
+  onDocTypeChange('bl_original');
+  // init speakable
+  setTimeout(function() { initSpeakable(); }, 150);
+});
+</script>
+
+  <!-- QR Code Modal -->
+  <div id="qr-modal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-6" style="background:rgba(2,6,23,0.9);backdrop-filter:blur(6px)">
+    <div class="glass max-w-sm w-full rounded-3xl p-8 text-center border border-amber-500/30">
+      <h3 class="text-base font-bold text-amber-400 mb-1 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-qrcode"></i> QR Code — بيانات الشحنة
+      </h3>
+      <p class="text-xs text-white/50 mb-4">امسح الكود للحصول على كل بيانات الشحنة فوراً — أو احفظه كصورة</p>
+      <div id="qr-container" class="bg-white rounded-2xl p-4 mx-auto inline-block mb-3"></div>
+      <p id="qr-ref-text" class="text-xs text-amber-300 font-mono mb-4"></p>
+      <div class="flex gap-2 justify-center flex-wrap">
+        <button onclick="downloadQRImage()" class="flex items-center gap-2 py-2 px-4 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl transition">
+          <i class="fa-solid fa-download"></i> Save QR Image
+        </button>
+        <button onclick="document.getElementById('qr-modal').classList.add('hidden')" class="flex items-center gap-2 py-2 px-4 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-xl transition">
+          <i class="fa-solid fa-xmark"></i> Close
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
